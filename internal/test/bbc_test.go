@@ -3,6 +3,7 @@ package test
 
 import (
 	"errors"
+	"fmt"
 	"github.com/duckfullstop/checkmate/pkg/blackjack"
 	"github.com/duckfullstop/checkmate/pkg/playdeck"
 	"testing"
@@ -11,26 +12,31 @@ import (
 func initTestGame() (table *blackjack.Table, player *blackjack.Player, err error) {
 	table = blackjack.NewTable(1)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
 	player = blackjack.NewPlayer()
 	err = table.Join(player)
-	// Shorthand on the return, saves a needless if err check
-	return table, player, err
+	if err != nil {
+		return
+	}
+
+	errs := table.Deal()
+	if len(errs) != 0 {
+		return table, player, fmt.Errorf("table.Deal returned errors")
+	}
+
+	return
 }
 
 func TestBBC1(t *testing.T) {
 	// Given I play a game of blackjack
 	// When I am dealt my opening hand
 	// Then I have two cards
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
 	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
-	}
+
 	if len(player.Hands[0].Cards) != 2 {
 		t.Errorf("player does not have 2 cards after dealing opening hand, got %v", len(player.Hands[0].Cards))
 	}
@@ -41,14 +47,11 @@ func TestBBC2(t *testing.T) {
 	// When I choose to 'hit'
 	// Then I receive another card
 	// And my score is updated
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
 	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
-	}
+
 	// Make a note of the existing score to ensure score does update.
 	// Proving the minimum score updated is sufficient to ensure that the routine runs.
 	_, minScore, _, _ := player.Hands[0].Score()
@@ -73,14 +76,11 @@ func TestBBC3(t *testing.T) {
 	// When I choose to 'stand'
 	// Then I receive no further cards
 	// And my score is updated
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
 	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
-	}
+
 	// When I choose to stand...
 	err = player.Hands[0].Stick()
 	if err != nil {
@@ -99,13 +99,9 @@ func TestBBC4(t *testing.T) {
 	// Given my score is updated or evaluated
 	// When it is 21 or less
 	// Then I have a valid hand
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
-	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
 	}
 
 	// We manually inject cards into the hand here to test the integration
@@ -138,13 +134,9 @@ func TestBBC5(t *testing.T) {
 	// Given my score is updated
 	// When it is 22 or more
 	// Then I am 'bust' and do not have a valid hand
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
-	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
 	}
 
 	// We manually inject cards into the hand here to test the integration
@@ -181,13 +173,9 @@ func TestBBC6(t *testing.T) {
 	// Given I have a king and an ace
 	// When my score is evaluated
 	// Then my score is 21
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
-	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
 	}
 
 	// We manually inject cards into the hand here to test the integration
@@ -220,13 +208,9 @@ func TestBBC7(t *testing.T) {
 	// Given I have a king, a queen, and an ace
 	// When my score is evaluated
 	// Then my score is 21
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
-	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
 	}
 
 	// We manually inject cards into the hand here to test the integration
@@ -263,13 +247,9 @@ func TestBBC8(t *testing.T) {
 	// Given that I have a nine, an ace, and another ace
 	// When my score is evaluated
 	// Then my score is 21
-	table, player, err := initTestGame()
+	_, player, err := initTestGame()
 	if err != nil {
 		t.Error(err)
-	}
-	errs := table.Deal()
-	if len(errs) != 0 {
-		t.Error("table.Deal returned errors")
 	}
 
 	// We manually inject cards into the hand here to test the integration
