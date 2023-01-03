@@ -46,6 +46,6 @@ A makefile is included to make this as simple as possible. To run:
 
 4. Run the game: `./localjack`
 
-### 📄 License
+## 📄 License
 
 The contents of this repository are licensed under the [MIT license](LICENSE.md). Basically, go wild - if it helps you learn, all the better!
