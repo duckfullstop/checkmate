@@ -43,3 +43,19 @@ If a more authentic game allowing for advantage play (e.g. card-counting) is des
 Everything in this package SHOULD be safe to call in goroutines due to the healthy usage of mutex locking throughout, though this isn't presently tested.
 
 Laying the package out in this table-player-hand style allows for easy extension into things like multiplayer (discussion point, perhaps?), as well as adding bot support (simply by holding a _Player_ instance that is manipulated by a bot package).
+
+### Thoughts on score calculation specifically
+I've implemented fetching the current score, hand validity, and lock status thusly:
+1. Action happens on hand (i.e hit or stick)
+2. Action calls `EvalScore()`, which takes a write lock on the hand
+3. `EvalScore()` calculates the score, writes it to the struct, and then ascertains whether the hand is or is not bust
+  * If it is bust, it sets `hand.Valid` to false, and `hand.Locked` to true
+4. The score, validity, and lock status can then be ascertained with `hand.Score()`, which simply pulls from the struct's private state fields in memory
+
+The main benefit to this approach is that the state of the hand is only calculated when it changes - at any other time, it's simply an extremely cheap memory lookup.
+
+There's a few other ways of tackling this - one of these is to calculate score, validity, etc. on each lookup.
+I opted not to go down that path, though it's arguably a safer one - if the hand's cards are mutated in any way outside of given actions, `hand.Score()` returns outdated information.
+It does have the major downside that any read of state requires a (comparatively expensive) calculation of the overall hand state, instead of just taking a look at what is effectively a cache.
+
+In effect, this method trades safety for speed. Changing it to the other way around would be fairly straight forward, as access is already enforced through `Score()`.
